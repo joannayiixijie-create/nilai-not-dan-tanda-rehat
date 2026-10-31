@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bandingkan Nilainya — Akuarium Muzik</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Music&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{
+    margin:0;padding:14px;min-height:100vh;
+    font-family:"Segoe UI",Arial,sans-serif;
+    background:linear-gradient(160deg,#eef3fb 0%,#f7f1e6 60%,#fdf6ec 100%);
+    color:#22303f;
+  }
+  .wrap{max-width:980px;margin:auto;}
+
+  h1{text-align:center;margin:0 0 2px;font-size:28px;color:#1b3a5c;letter-spacing:.5px;}
+  .sub{text-align:center;color:#5b7186;margin:0 0 12px;font-size:13px;}
+
+  .map{
+    background:#fff;border:2px solid #1b3a5c;border-radius:14px;
+    padding:10px 14px;margin-bottom:8px;
+    display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:13px;
+    box-shadow:0 4px 0 rgba(27,58,92,.08);
+  }
+  .map-item{text-align:center;padding:3px;}
+  .map-item b{display:block;color:#1b3a5c;margin-bottom:2px;font-size:12px;}
+  .map-item span{color:#0b7a4b;font-weight:700;}
+
+  .reminder{
+    background:#fff8e1;border-left:5px solid #f0b400;
+    padding:7px 14px;border-radius:10px;margin-bottom:10px;
+    font-size:12.5px;color:#6b5200;line-height:1.5;
+  }
+  .reminder b{color:#8a6400;}
+
+  .hud{
+    display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;
+    margin-bottom:8px;
+  }
+  .chip{
+    background:#fff;border:2px solid #cfdae6;border-radius:999px;
+    padding:5px 14px;font-size:13px;font-weight:600;color:#1b3a5c;
+    box-shadow:0 3px 0 rgba(27,58,92,.08);white-space:nowrap;
+  }
+  .chip b{color:#e0533d;font-size:15px;}
+  .chip.combo b{color:#7b3ff2;}
+  .chip.pulse{animation:pulse .35s;}
+  @keyframes pulse{50%{transform:scale(1.18);}}
+
+  .icon-btn{
+    border:2px solid #cfdae6;background:#fff;border-radius:999px;
+    width:38px;height:38px;font-size:17px;cursor:pointer;
+    box-shadow:0 3px 0 rgba(27,58,92,.08);
+  }
+  .icon-btn:active{transform:translateY(2px);}
+
+  .target-bar{
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    flex-wrap:wrap;
+    background:#fff;border:2px solid #1b3a5c;border-radius:14px;
+    padding:9px 14px;margin-bottom:8px;font-size:14px;
+    box-shadow:0 4px 0 rgba(27,58,92,.08);
+  }
+  .tb-mode{color:#5b7186;font-weight:600;}
+  .tb-target{
+    background:#1b3a5c;color:#fff;padding:3px 16px;border-radius:8px;
+    font-size:17px;font-weight:800;letter-spacing:.3px;
+  }
+  .tb-remain{color:#e0533d;font-weight:700;font-size:13px;}
+
+  .basket{
+    display:none;align-items:center;justify-content:center;gap:12px;
+    background:#eef5ff;border:2px dashed #8fb8e0;border-radius:14px;
+    padding:8px;margin-bottom:8px;
+  }
+  .basket.show{display:flex;}
+  .b-slot{
+    width:58px;height:76px;border:2px dashed #8fb8e0;border-radius:10px;
+    background:#fff;display:flex;align-items:center;justify-content:center;
+    font-size:22px;font-weight:800;color:#9fb0c2;cursor:pointer;
+    transition:all .2s;
+    font-family:'Noto Music','Segoe UI Symbol',serif;
+  }
+  .b-slot.filled{border-style:solid;border-color:#28b473;background:#ecfbf3;}
+  .b-slot:hover{border-color:#4d96ff;}
+  .b-op{font-size:20px;font-weight:800;color:#5b7186;}
+  #bSum{font-size:16px;color:#1b3a5c;font-weight:800;min-width:64px;text-align:center;}
+
+  .tank{
+    position:relative;width:100%;height:440px;
+    background:linear-gradient(180deg,#9ad8f7 0%,#4aa8e0 45%,#1f6399 100%);
+    border:5px solid #1b3a5c;border-radius:18px;
+    overflow:hidden;cursor:crosshair;
+    box-shadow:inset 0 0 50px rgba(0,40,80,.4),0 6px 18px rgba(27,58,92,.2);
+    margin-bottom:8px;user-select:none;
+  }
+  .tank::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background-image:
+      radial-gradient(circle at 15% 90%,rgba(255,255,255,.18) 0,transparent 2.5%),
+      radial-gradient(circle at 55% 60%,rgba(255,255,255,.13) 0,transparent 2%),
+      radial-gradient(circle at 80% 20%,rgba(255,255,255,.11) 0,transparent 1.8%),
+      radial-gradient(circle at 35% 30%,rgba(255,255,255,.14) 0,transparent 2.2%);
+    background-size:180px 180px,240px 240px,320px 320px,280px 280px;
+    animation:bubble 14s linear infinite;
+  }
+  @keyframes bubble{
+    from{background-position:0 0,0 0,0 0,0 0;}
+    to{background-position:0 -360px,0 -480px,0 -640px,0 -560px;}
+  }
+  .seaweed{
+    position:absolute;bottom:0;width:20px;height:100px;
+    background:linear-gradient(180deg,#2fa360,#1f7a45);
+    border-radius:50% 50% 0 0;opacity:.7;transform-origin:bottom center;
+    animation:sway 3.4s ease-in-out infinite;pointer-events:none;
+  }
+  @keyframes sway{0%,100%{transform:rotate(-8deg);}50%{transform:rotate(8deg);}}
+
+  .fish{
+    position:absolute;left:0;top:0;
+    cursor:pointer;will-change:transform;z-index:5;
+  }
+  .fish-inner{
+    position:absolute;inset:0;
+    transition:transform .32s ease,opacity .32s ease;
+    transform-origin:center center;
+  }
+  .fish:hover .fish-inner{transform:scale(1.06);}
+  .fish.caught{pointer-events:none;}
+  .fish.caught .fish-inner{
+    transform:scale(.15) rotate(25deg);
+    opacity:0;
+  }
+  .fish-body-svg{
+    position:absolute;inset:0;width:100%;height:100%;
+    transition:transform .18s ease;
+    filter:drop-shadow(0 3px 5px rgba(0,30,60,.28));
+  }
+  /* Simbol NOT / REHAT: guna font Noto Music, sentiasa tegak */
+  .fish-symbol{
+    position:absolute;
+    left:52%;top:50%;
+    transform:translate(-50%,-50%);
+    font-family:'Noto Music','Segoe UI Symbol','Apple Symbols',serif;
+    font-size:42px;
+    line-height:1;
+    color:#12212f;
+    pointer-events:none;
+    text-shadow:0 1px 3px rgba(0,30,60,.3);
+    font-feature-settings:"kern" 0;
+    letter-spacing:0;
+  }
+  .fish.wrong .fish-inner{animation:wrongShake .5s;}
+  @keyframes wrongShake{
+    0%,100%{transform:translateX(0);filter:none;}
+    25%{transform:translateX(-7px);filter:drop-shadow(0 0 8px #ff4d4d) hue-rotate(-30deg) saturate(3);}
+    75%{transform:translateX(7px);filter:drop-shadow(0 0 8px #ff4d4d) hue-rotate(-30deg) saturate(3);}
+  }
+
+  .float-text{
+    position:absolute;font-weight:800;font-size:22px;color:#fff;
+    text-shadow:0 2px 8px rgba(0,0,0,.5);
+    pointer-events:none;z-index:20;
+    animation:floatUp 1s ease-out forwards;
+    transform:translate(-50%,0);
+  }
+  .float-text.good{color:#a8ffbe;}
+  .float-text.bad{color:#ffb3b3;}
+  @keyframes floatUp{
+    0%{transform:translate(-50%,0) scale(.7);opacity:0;}
+    20%{opacity:1;transform:translate(-50%,-12px) scale(1.15);}
+    100%{transform:translate(-50%,-82px) scale(1);opacity:0;}
+  }
+
+  .msg{
+    text-align:center;font-weight:700;min-height:26px;
+    margin-bottom:8px;font-size:13.5px;color:#2f7ae5;
+    transition:color .2s;padding:0 8px;
+  }
+  .msg.good{color:#0b7a4b;}
+  .msg.bad{color:#e0533d;}
+
+  .toolbar{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+  .btn{
+    border:none;border-radius:12px;padding:11px 24px;cursor:pointer;
+    font-size:14px;font-weight:700;font-family:inherit;
+    background:#1b3a5c;color:#fff;box-shadow:0 4px 0 #0f2438;
+  }
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #0f2438;}
+
+  .overlay{
+    position:fixed;inset:0;background:rgba(15,36,56,.8);
+    display:none;align-items:center;justify-content:center;
+    z-index:200;padding:20px;
+  }
+  .overlay.show{display:flex;}
+  .overlay-card{
+    background:#fff;border-radius:22px;padding:30px 40px;
+    text-align:center;max-width:420px;
+    box-shadow:0 22px 60px rgba(0,0,0,.35);
+    animation:popIn .4s ease;
+  }
+  @keyframes popIn{from{transform:scale(.7);opacity:0;}to{transform:scale(1);opacity:1;}}
+  .overlay-card h2{margin:0 0 6px;color:#1b3a5c;font-size:26px;}
+  .overlay-card p{margin:5px 0;color:#5b7186;font-size:14px;}
+  .overlay-card .big{
+    font-size:46px;font-weight:800;color:#f0b400;margin:6px 0;
+    text-shadow:0 3px 0 rgba(240,180,0,.25);
+  }
+  .overlay-card .btn{margin-top:14px;}
+
+  .confetti{
+    position:fixed;width:9px;height:9px;border-radius:2px;
+    pointer-events:none;z-index:999;
+    animation:fly .95s ease-out forwards;
+  }
+  @keyframes fly{to{transform:translate(var(--dx),var(--dy)) rotate(600deg);opacity:0;}}
+
+  @media(max-width:640px){
+    .map{grid-template-columns:1fr;gap:3px;}
+    .map-item{display:flex;justify-content:space-between;align-items:center;text-align:left;}
+    .map-item b{margin:0;}
+    .tank{height:330px;}
+    h1{font-size:22px;}
+    .b-slot{width:44px;height:60px;font-size:18px;}
+    .fish-symbol{font-size:32px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Bandingkan Nilainya</h1>
+  <p class="sub">Akuarium Muzik — tangkap ikan mengikut nilai not dan tanda rehat.</p>
+
+  <div class="map">
+    <div class="map-item">
+      <b>Satu semibrif = dua minim</b>
+      <span>4 detik = 2 detik + 2 detik</span>
+    </div>
+    <div class="map-item">
+      <b>Satu minim = dua krocet</b>
+      <span>2 detik = 1 detik + 1 detik</span>
+    </div>
+    <div class="map-item">
+      <b>Satu krocet = dua kuaver</b>
+      <span>1 detik = ½ detik + ½ detik</span>
+    </div>
+  </div>
+
+  <div class="reminder">
+    <b>Dua not kuaver bersamaan dengan satu detik.</b>
+    Tanda rehat mempunyai nilai yang sama dengan not yang sepadan.
+  </div>
+
+  <div class="hud">
+    <div class="chip">Skor: <b id="score">0</b></div>
+    <div class="chip">Pusingan: <b id="roundNum">1/12</b></div>
+    <div class="chip combo" id="comboChip">Kombo: <b id="combo">x1</b></div>
+    <button class="icon-btn" id="soundBtn" title="Bunyi">🔊</button>
+  </div>
+
+  <div class="target-bar">
+    <span class="tb-mode" id="tbMode">Tangkap 3 ekor ikan bernilai</span>
+    <span class="tb-target" id="targetLabel">4 detik</span>
+    <span class="tb-remain" id="tbRemain">(3 ikan lagi)</span>
+  </div>
+
+  <div class="basket" id="basket">
+    <div class="b-slot" id="bs0">?</div>
+    <div class="b-op">+</div>
+    <div class="b-slot" id="bs1">?</div>
+    <div class="b-op">=</div>
+    <strong id="bSum">?</strong>
+  </div>
+
+  <div class="tank" id="tank"></div>
+
+  <div class="msg" id="msg">Klik ikan yang betul di dalam akuarium.</div>
+
+  <div class="toolbar">
+    <button class="btn" id="resetBtn">Main Semula</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="overlay-card">
+    <h2>Syabas!</h2>
+    <p>Kamu berjaya menangkap semua ikan!</p>
+    <div class="big" id="finalScore">0</div>
+    <p>mata</p>
+    <p style="color:#0b7a4b;font-weight:700;margin-top:12px;">
+      Dua not kuaver bersamaan dengan satu detik.
+    </p>
+    <button class="btn" id="playAgain">Main Semula</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   1. AUDIO
+   ============================================================ */
+let actx = null, soundOn = true;
+function ctx(){
+  if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+  if(actx.state === "suspended") actx.resume();
+  return actx;
+}
+function tone(freq, dur, type="sine", vol=0.18, delay=0){
+  if(!soundOn) return;
+  const a = ctx(), t = a.currentTime + delay;
+  const osc = a.createOscillator(), gain = a.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t);
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.exponentialRampToValueAtTime(vol, t + 0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  osc.connect(gain).connect(a.destination);
+  osc.start(t); osc.stop(t + dur + 0.05);
+}
+const sfx = {
+  tap(){ tone(760, 0.06, "square", 0.06); },
+  splash(){ tone(420, 0.1, "sine", 0.09); tone(720, 0.12, "sine", 0.07, 0.05); },
+  catch(f){ tone(f, 0.16, "triangle", 0.2); tone(f*1.5, 0.2, "sine", 0.12, 0.05); },
+  wrong(){ tone(190, 0.15, "sawtooth", 0.12); tone(130, 0.2, "sawtooth", 0.12, 0.08); },
+  round(){ [523,659,784,1047].forEach((f,i)=>tone(f,0.3,"triangle",0.18,i*0.09)); },
+  win(){ [523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,0.42,"triangle",0.2,i*0.12)); }
+};
+
+/* ============================================================
+   2. DATA NOT & TANDA REHAT
+   Guna Unicode music symbols standard.
+   Noto Music font melukis setiap karakter sebagai bentuk piawai.
+   ============================================================ */
+const NOTE_DATA = {
+  semibrif:       { nilai:4,   name:"Semibrif",        rest:false, ch:"\u{1D15D}" },
+  minim:          { nilai:2,   name:"Minim",           rest:false, ch:"\u{1D15E}" },
+  krocet:         { nilai:1,   name:"Krocet",          rest:false, ch:"\u{1D15F}" },
+  kuaver:         { nilai:0.5, name:"Kuaver",          rest:false, ch:"\u{1D160}" },
+  semibrif_rehat: { nilai:4,   name:"Rehat Semibrif",  rest:true,  ch:"\u{1D13B}" },
+  minim_rehat:    { nilai:2,   name:"Rehat Minim",     rest:true,  ch:"\u{1D13C}" },
+  krocet_rehat:   { nilai:1,   name:"Rehat Krocet",    rest:true,  ch:"\u{1D13D}" },
+  kuaver_rehat:   { nilai:0.5, name:"Rehat Kuaver",    rest:true,  ch:"\u{1D13E}" }
+};
+
+function symChar(type){ return NOTE_DATA[type].ch; }
+
+/* ---------- Ikan SVG (badan sahaja) ---------- */
+function fishHTML(type){
+  const d = NOTE_DATA[type];
+  const isRest = d.rest;
+  const body1 = isRest ? "#ffe6cc" : "#d8ecff";
+  const body2 = isRest ? "#ffc98f" : "#a3d2f7";
+  const edge  = isRest ? "#e07f1f" : "#3b82d6";
+  const gid = "g" + Math.random().toString(36).slice(2,8);
+
+  return `
+    <div class="fish-inner">
+      <svg class="fish-body-svg" viewBox="0 0 150 84" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="${gid}" x1="0" y1="0" x2="0.3" y2="1">
+            <stop offset="0" stop-color="${body1}"/>
+            <stop offset="1" stop-color="${body2}"/>
+          </linearGradient>
+        </defs>
+        <path d="M 46 42 L 10 12 Q 0 42 10 72 Z" fill="${edge}" opacity="0.85"/>
+        <path d="M 64 16 Q 84 1 106 16" fill="${edge}" opacity="0.8"/>
+        <path d="M 68 68 Q 88 83 108 68" fill="${edge}" opacity="0.8"/>
+        <ellipse cx="85" cy="42" rx="55" ry="33" fill="url(#${gid})"
+                 stroke="${edge}" stroke-width="2.2"/>
+        <ellipse cx="85" cy="56" rx="42" ry="14" fill="#fff" opacity="0.28"/>
+        <path d="M 108 20 Q 102 42 108 64" stroke="#fff" stroke-width="2.4"
+              fill="none" opacity="0.5"/>
+        <circle cx="119" cy="33" r="7.2" fill="#fff"/>
+        <circle cx="120" cy="33" r="3.4" fill="#12212f"/>
+        <circle cx="121.2" cy="31.6" r="1.2" fill="#fff"/>
+      </svg>
+      <span class="fish-symbol">${symChar(type)}</span>
+    </div>`;
+}
+
+/* ============================================================
+   3. PUSINGAN (12)
+   ============================================================ */
+const ROUNDS = [
+  { mode:"pilih",  target:4,   label:"4 detik",  need:3 },
+  { mode:"pilih",  target:2,   label:"2 detik",  need:3 },
+  { mode:"pilih",  target:1,   label:"1 detik",  need:3 },
+  { mode:"pilih",  target:0.5, label:"½ detik",  need:3 },
+  { mode:"pasang", target:4,   label:"4 detik" },
+  { mode:"pasang", target:2,   label:"2 detik" },
+  { mode:"pasang", target:3,   label:"3 detik" },
+  { mode:"pasang", target:1,   label:"1 detik" },
+  { mode:"pasang", target:5,   label:"5 detik" },
+  { mode:"pasang", target:1.5, label:"1½ detik" },
+  { mode:"pasang", target:6,   label:"6 detik" },
+  { mode:"pasang", target:2.5, label:"2½ detik" }
+];
+
+const VALS = [4,2,1,0.5];
+function typesByValue(v){
+  return Object.keys(NOTE_DATA).filter(k => Math.abs(NOTE_DATA[k].nilai - v) < 1e-6);
+}
+function findPairs(target){
+  const out = [];
+  for(let i=0;i<VALS.length;i++)
+    for(let j=i;j<VALS.length;j++)
+      if(Math.abs(VALS[i]+VALS[j]-target) < 1e-6) out.push([VALS[i], VALS[j]]);
+  return out;
+}
+function formatNilai(n){
+  const whole = Math.floor(n + 1e-6);
+  const half = Math.abs(n - whole - 0.5) < 1e-6;
+  if(whole === 0) return half ? "½" : "0";
+  return half ? whole + "½" : String(whole);
+}
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+/* ============================================================
+   4. KEADAAN
+   ============================================================ */
+const tank = document.getElementById("tank");
+const msgEl = document.getElementById("msg");
+const scoreEl = document.getElementById("score");
+const comboEl = document.getElementById("combo");
+const comboChip = document.getElementById("comboChip");
+const roundNumEl = document.getElementById("roundNum");
+const tbMode = document.getElementById("tbMode");
+const targetLabel = document.getElementById("targetLabel");
+const tbRemain = document.getElementById("tbRemain");
+const basket = document.getElementById("basket");
+const bSlots = [document.getElementById("bs0"), document.getElementById("bs1")];
+const bSum = document.getElementById("bSum");
+
+let roundIndex = 0;
+let score = 0;
+let combo = 1;
+let fishes = [];
+let selection = [];
+let locked = false;
+let lastTime = performance.now();
+
+/* ============================================================
+   5. UTILITI
+   ============================================================ */
+function setMsg(t, k=""){ msgEl.textContent = t; msgEl.className = "msg " + k; }
+function updateHud(){
+  scoreEl.textContent = score;
+  comboEl.textContent = "x" + combo;
+  roundNumEl.textContent = Math.min(roundIndex+1, ROUNDS.length) + "/" + ROUNDS.length;
+}
+function pulseCombo(){
+  comboChip.classList.remove("pulse");
+  void comboChip.offsetWidth;
+  comboChip.classList.add("pulse");
+}
+function updateRemain(){
+  const r = ROUNDS[roundIndex];
+  if(r.mode !== "pilih") return;
+  const remain = fishes.filter(f => f.alive && Math.abs(f.nilai - r.target) < 1e-6).length;
+  tbRemain.textContent = `(${remain} ikan lagi)`;
+}
+function renderBasket(){
+  for(let i=0;i<2;i++){
+    const f = selection[i], slot = bSlots[i];
+    if(f){
+      slot.innerHTML = `<span style="font-family:'Noto Music',serif;font-size:38px;color:#12212f;line-height:1;">${symChar(f.type)}</span>`;
+      slot.classList.add("filled");
+    } else {
+      slot.textContent = "?";
+      slot.classList.remove("filled");
+    }
+  }
+  const sum = selection.reduce((a,f) => a + f.nilai, 0);
+  bSum.textContent = formatNilai(sum) + " detik";
+}
+
+/* ============================================================
+   6. EFEK
+   ============================================================ */
+function floatText(x, y, text, kind){
+  const tr = tank.getBoundingClientRect();
+  const d = document.createElement("div");
+  d.className = "float-text " + kind;
+  d.textContent = text;
+  d.style.left = (x - tr.left) + "px";
+  d.style.top  = (y - tr.top) + "px";
+  tank.appendChild(d);
+  setTimeout(() => d.remove(), 1000);
+}
+function confettiBurst(x, y, count=24){
+  const colors = ["#ff6b6b","#ffd93d","#6bcB77","#4d96ff","#b06bff","#ff9f43"];
+  for(let i=0;i<count;i++){
+    const d = document.createElement("div");
+    d.className = "confetti";
+    d.style.left = x + "px";
+    d.style.top  = y + "px";
+    const a = Math.random()*Math.PI*2, dist = 60 + Math.random()*130;
+    d.style.setProperty("--dx", Math.cos(a)*dist + "px");
+    d.style.setProperty("--dy", Math.sin(a)*dist + "px");
+    d.style.background = colors[i % colors.length];
+    document.body.appendChild(d);
+    setTimeout(() => d.remove(), 980);
+  }
+}
+function confettiRain(){
+  const colors = ["#ff6b6b","#ffd93d","#6bcB77","#4d96ff","#b06bff","#ff9f43"];
+  for(let i=0;i<80;i++){
+    setTimeout(() => {
+      const d = document.createElement("div");
+      d.className = "confetti";
+      d.style.left = Math.random()*window.innerWidth + "px";
+      d.style.top  = "-12px";
+      d.style.setProperty("--dx", (Math.random()-.5)*160 + "px");
+      d.style.setProperty("--dy", window.innerHeight + 40 + "px");
+      d.style.background = colors[Math.floor(Math.random()*colors.length)];
+      document.body.appendChild(d);
+      setTimeout(() => d.remove(), 1100);
+    }, i*26);
+  }
+}
+
+/* ============================================================
+   7. SPAWN
+   ============================================================ */
+function fishSize(){
+  return window.innerWidth < 640 ? {w:112,h:63} : {w:150,h:84};
+}
+function placeFish(f, avoid = true){
+  const tr = tank.getBoundingClientRect();
+  const maxX = Math.max(10, tr.width  - f.w - 12);
+  const maxY = Math.max(10, tr.height - f.h - 12);
+  let x = 0, y = 0, tries = 0;
+  do{
+    x = 12 + Math.random()*maxX;
+    y = 12 + Math.random()*maxY;
+    tries++;
+  } while(avoid && tries < 50 && fishes.some(o =>
+    o !== f && o.alive && Math.hypot(o.x - x, o.y - y) < f.w * 0.8
+  ));
+  f.x = x; f.y = y;
+  if(!f.vx){
+    const a = Math.random()*Math.PI*2, sp = 24 + Math.random()*32;
+    f.vx = Math.cos(a)*sp; f.vy = Math.sin(a)*sp;
+  }
+  f.el.style.transform = `translate(${x}px, ${y}px)`;
+}
+function spawnFish(type){
+  const size = fishSize();
+  const el = document.createElement("div");
+  el.className = "fish";
+  el.style.width  = size.w + "px";
+  el.style.height = size.h + "px";
+  el.innerHTML = fishHTML(type);
+  tank.appendChild(el);
+
+  const a = Math.random()*Math.PI*2, sp = 24 + Math.random()*32;
+  const fish = {
+    el,
+    bodyEl: el.querySelector(".fish-body-svg"),
+    x:0, y:0,
+    vx: Math.cos(a)*sp, vy: Math.sin(a)*sp,
+    w: size.w, h: size.h,
+    phase: Math.random()*Math.PI*2,
+    flipped: false,
+    type,
+    nilai: NOTE_DATA[type].nilai,
+    alive: true
+  };
+  el.addEventListener("click", e => { e.stopPropagation(); handleCatch(fish); });
+  fishes.push(fish);
+  placeFish(fish);
+}
+
+/* ============================================================
+   8. MULAKAN
+   ============================================================ */
+function startRound(){
+  fishes.forEach(f => f.el.remove());
+  fishes = [];
+  selection = [];
+  locked = false;
+  tank.querySelectorAll(".fish, .float-text").forEach(el => el.remove());
+
+  if(!tank.querySelector(".seaweed")){
+    for(let i=0;i<5;i++){
+      const sw = document.createElement("div");
+      sw.className = "seaweed";
+      sw.style.left = (6 + i*20) + "%";
+      sw.style.height = (70 + Math.random()*55) + "px";
+      sw.style.animationDelay = (Math.random()*2) + "s";
+      tank.appendChild(sw);
+    }
+  }
+
+  const r = ROUNDS[roundIndex];
+  const list = [];
+
+  if(r.mode === "pilih"){
+    const tt = typesByValue(r.target);
+    for(let i=0;i<r.need;i++) list.push(tt[i % tt.length]);
+    const dv = VALS.filter(v => Math.abs(v - r.target) > 1e-6);
+    for(let i=0;i<3;i++){
+      const v = dv[Math.floor(Math.random()*dv.length)];
+      const ts = typesByValue(v);
+      list.push(ts[Math.floor(Math.random()*ts.length)]);
+    }
+    tbMode.textContent = `Tangkap ${r.need} ekor ikan bernilai`;
+    tbRemain.style.display = "";
+    basket.classList.remove("show");
+  } else {
+    const pairs = findPairs(r.target);
+    const pair = pairs[Math.floor(Math.random()*pairs.length)];
+    pair.forEach(v => {
+      const ts = typesByValue(v);
+      list.push(ts[Math.floor(Math.random()*ts.length)]);
+    });
+    for(let i=0;i<4;i++){
+      const v = VALS[Math.floor(Math.random()*VALS.length)];
+      const ts = typesByValue(v);
+      list.push(ts[Math.floor(Math.random()*ts.length)]);
+    }
+    tbMode.textContent = `Tangkap tepat 2 ekor, jumlahnya`;
+    tbRemain.style.display = "none";
+    basket.classList.add("show");
+    renderBasket();
+  }
+
+  shuffle(list).forEach(t => spawnFish(t));
+  targetLabel.textContent = r.label;
+  updateHud();
+  updateRemain();
+  setMsg(r.mode === "pilih"
+    ? `Cari dan klik ikan bernilai ${r.label}.`
+    : `Pilih 2 ekor ikan yang jumlahnya ${r.label}.`);
+  sfx.splash();
+}
+
+/* ============================================================
+   9. KLIK
+   ============================================================ */
+function handleCatch(fish){
+  if(!fish.alive || locked) return;
+  const r = ROUNDS[roundIndex];
+
+  if(r.mode === "pilih"){
+    const isTarget = Math.abs(fish.nilai - r.target) < 1e-6;
+    const rect = fish.el.getBoundingClientRect();
+    const cx = rect.left + rect.width/2;
+    const cy = rect.top + rect.height/2;
+    const d = NOTE_DATA[fish.type];
+
+    if(isTarget){
+      fish.alive = false;
+      fish.el.classList.add("caught");
+      sfx.catch(280 + Math.random()*340);
+      const pts = 10 * combo;
+      score += pts;
+      combo = Math.min(combo + 1, 5);
+      updateHud(); pulseCombo();
+      floatText(cx, cy, "+" + pts, "good");
+      confettiBurst(cx, cy);
+      setMsg(`Betul! ${d.name} = ${formatNilai(d.nilai)} detik.`, "good");
+      setTimeout(() => { fish.el.remove(); updateRemain(); checkRound(); }, 420);
+    } else {
+      sfx.wrong();
+      fish.el.classList.add("wrong");
+      setTimeout(() => fish.el.classList.remove("wrong"), 520);
+      combo = 1; score = Math.max(0, score - 5);
+      updateHud();
+      floatText(cx, cy, "-5", "bad");
+      let extra = "";
+      if(fish.type === "kuaver" || fish.type === "kuaver_rehat")
+        extra = " Dua not kuaver bersamaan dengan satu detik.";
+      setMsg(`Salah! ${d.name} = ${formatNilai(d.nilai)} detik, bukan ${formatNilai(r.target)} detik.${extra}`, "bad");
+    }
+    return;
+  }
+
+  if(selection.length >= 2) return;
+  if(selection.includes(fish)) return;
+
+  fish.alive = false;
+  fish.el.classList.add("caught");
+  sfx.catch(320 + Math.random()*260);
+  selection.push(fish);
+  renderBasket();
+  setMsg(`Ikan dipilih. Pilih ${2 - selection.length} ekor lagi.`);
+
+  if(selection.length === 2){
+    locked = true;
+    setTimeout(checkPair, 520);
+  }
+}
+
+function checkPair(){
+  const r = ROUNDS[roundIndex];
+  const sum = selection.reduce((a,f) => a + f.nilai, 0);
+  const ok = Math.abs(sum - r.target) < 1e-6;
+
+  if(ok){
+    sfx.round();
+    const pts = 30 * combo;
+    score += pts;
+    combo = Math.min(combo + 1, 5);
+    updateHud(); pulseCombo();
+    const tr = tank.getBoundingClientRect();
+    confettiBurst(tr.left + tr.width/2, tr.top + tr.height/2, 34);
+    setMsg(`Betul! ${formatNilai(selection[0].nilai)} + ${formatNilai(selection[1].nilai)} = ${r.label}.`, "good");
+
+    selection.forEach(f => f.el.remove());
+    selection = [];
+    renderBasket();
+    locked = false;
+
+    setTimeout(() => {
+      roundIndex++;
+      if(roundIndex >= ROUNDS.length) endGame();
+      else startRound();
+    }, 1400);
+  } else {
+    sfx.wrong();
+    combo = 1;
+    score = Math.max(0, score - 8);
+    updateHud();
+    setMsg(`Salah! ${formatNilai(selection[0].nilai)} + ${formatNilai(selection[1].nilai)} = ${formatNilai(sum)} detik, bukan ${r.label}.`, "bad");
+
+    const back = selection.slice();
+    selection = [];
+    renderBasket();
+
+    setTimeout(() => {
+      back.forEach(f => {
+        f.alive = true;
+        f.el.classList.remove("caught");
+        placeFish(f);
+      });
+      locked = false;
+      setMsg(`Cuba lagi. Cari dua ekor yang jumlahnya ${r.label}.`, "bad");
+    }, 700);
+  }
+}
+
+function checkRound(){
+  const r = ROUNDS[roundIndex];
+  if(r.mode !== "pilih") return;
+  const remain = fishes.filter(f => f.alive && Math.abs(f.nilai - r.target) < 1e-6).length;
+  if(remain === 0){
+    sfx.round();
+    setMsg(`Syabas! Semua ikan ${r.label} telah ditangkap!`, "good");
+    confettiBurst(window.innerWidth/2, window.innerHeight/2, 30);
+    setTimeout(() => {
+      roundIndex++;
+      if(roundIndex >= ROUNDS.length) endGame();
+      else startRound();
+    }, 1500);
+  }
+}
+
+/* ============================================================
+   10. TAMAT / RESET
+   ============================================================ */
+function endGame(){
+  sfx.win();
+  document.getElementById("finalScore").textContent = score;
+  document.getElementById("overlay").classList.add("show");
+  setTimeout(confettiRain, 250);
+}
+function resetGame(){
+  roundIndex = 0;
+  score = 0;
+  combo = 1;
+  selection = [];
+  locked = false;
+  fishes.forEach(f => f.el.remove());
+  fishes = [];
+  document.getElementById("overlay").classList.remove("show");
+  startRound();
+}
+
+bSlots.forEach((slot, i) => {
+  slot.addEventListener("click", () => {
+    if(locked) return;
+    const f = selection[i];
+    if(!f) return;
+    sfx.tap();
+    f.alive = true;
+    f.el.classList.remove("caught");
+    placeFish(f);
+    selection.splice(i,1);
+    renderBasket();
+    setMsg("Ikan dikembalikan ke akuarium.");
+  });
+});
+
+/* ============================================================
+   11. ANIMASI
+   ============================================================ */
+function loop(now){
+  const dt = Math.min((now - lastTime)/1000, 0.05);
+  lastTime = now;
+  const tr = tank.getBoundingClientRect();
+  const pad = 6;
+
+  for(const f of fishes){
+    if(!f.alive) continue;
+    f.x += f.vx * dt;
+    f.y += f.vy * dt;
+
+    if(f.x < pad){ f.x = pad; f.vx = Math.abs(f.vx); }
+    if(f.x > tr.width - f.w - pad){ f.x = tr.width - f.w - pad; f.vx = -Math.abs(f.vx); }
+    if(f.y < pad){ f.y = pad; f.vy = Math.abs(f.vy); }
+    if(f.y > tr.height - f.h - pad){ f.y = tr.height - f.h - pad; f.vy = -Math.abs(f.vy); }
+
+    const bob = Math.sin(now/620 + f.phase) * 3;
+    f.el.style.transform = `translate(${f.x}px, ${f.y + bob}px)`;
+
+    const shouldFlip = f.vx < 0;
+    if(shouldFlip !== f.flipped){
+      f.flipped = shouldFlip;
+      if(f.bodyEl) f.bodyEl.style.transform = shouldFlip ? "scaleX(-1)" : "";
+    }
+  }
+  requestAnimationFrame(loop);
+}
+
+document.getElementById("resetBtn").addEventListener("click", () => { sfx.tap(); resetGame(); });
+document.getElementById("playAgain").addEventListener("click", () => { sfx.tap(); resetGame(); });
+document.getElementById("soundBtn").addEventListener("click", e => {
+  soundOn = !soundOn;
+  e.currentTarget.textContent = soundOn ? "🔊" : "🔇";
+  if(soundOn) sfx.tap();
+});
+
+requestAnimationFrame(loop);
+startRound();
+</script>
+</body>
+</html>
